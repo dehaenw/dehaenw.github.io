@@ -14,7 +14,7 @@ Over the years, I have released some music. I was also running the [Genot Centre
 
 - Misty Picture - Lens Blossom (Pointless Geometry, Cassette, 2021). [Bandcamp](https://pointless-geometry.bandcamp.com/album/misty-picture-lens-blossom). In collaboration with [Enchanted Lands](https://poustevnice.bandcamp.com/album/dreamgirl-workshop)
 
-- Neo Dove - GIS (pustevnice, Digital, 2024) [Bandcamp](https://poustevnice.bandcamp.com/album/gis)
+- Neo Dove - GIS (poustevnice, Digital, 2024) [Bandcamp](https://poustevnice.bandcamp.com/album/gis)
 
 # Some tracks
 
