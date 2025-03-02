@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Welcome to Jekyll!"
+title:  "Placeholder post. Will be removed"
 date:   2025-03-01 12:29:32 +0100
 categories: jekyll update
 ---
