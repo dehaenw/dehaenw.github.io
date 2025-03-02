@@ -17,6 +17,13 @@ cofunded by the European Union.
 Beyond my main affiliation, I am also connected to the Department of Informatics
 and Chemistry where I work on cheminformatics research.
 
+Beware, there are two more Wims you may be confusing me with. The first one is
+Wim A. Dehaen. He is also active in the chemistry field and you can find his
+site [here](https://chem.kuleuven.be/en/research/mds/losa). He is my father. 
+Another similarly named person is [Wim Dehaene](https://micas.esat.kuleuven.be/team/wim-dehaene).
+He is a professor active in the field of electic engineering. No family relation
+with this one.
+
 I have several interests, here are a few of them: 
 
 - Cheminformatics:
@@ -25,6 +32,7 @@ I have several interests, here are a few of them:
     - Computer-aided synthesis planning
     - Chemical complexity
     - Artificial chemistry
+    - Chemical graph theory
 - Virtual screening:
     - Pharmacophore models
     - Protein-ligand pose prediction and ranking
