@@ -32,4 +32,4 @@ By the way, some years ago I needed to chase down the famous "10<sup>60</sup>" n
 
 ![Bohacek]({{ site.url }}/assets/bohacek.png)  
 
-For higher and lower estimates of the size of chemical space, check out [this article](https://link.springer.com/article/10.1007/s10822-013-9672-4) by Polishchuck and coworkers. The new estimate these authors provide is also based on extrapolation from Reymond's GDB work.
+For higher and lower estimates of the size of chemical space, check out [this article](https://link.springer.com/article/10.1007/s10822-013-9672-4) by Polishchuk and coworkers. The new estimate these authors provide is also based on extrapolation from Reymond's GDB work.
