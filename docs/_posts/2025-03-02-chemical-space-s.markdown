@@ -28,7 +28,7 @@ I believe that concern applies to the universalizing mission of chemical space a
 
 Perhaps just like our physical universe, chemical space is heterogenous, filled with uncountable curiosities, yet mostly filled with empty dead stuff and physically unbridgable distances between its contents. And traversal and observation of it tends to be local.
 
-By the way, some years ago I needed to chase down the famous "10<sup>60</sup>" number which is often quoted as one estimate of the size of chemical space. To my surprise, the argument was made in a footnote and is of the "Napkin Math". See the screenshot (reproduced without permission from [Bohacek et al](https://onlinelibrary.wiley.com/doi/pdf/10.1002/(SICI)1098-1128(199601)16:1%3C3::AID-MED1%3E3.0.CO;2-6)) below.
+By the way, some years ago I needed to chase down the famous "10<sup>60</sup>" number which is often quoted as one estimate of the size of chemical space. To my surprise, the argument was made in a footnote and is of the "Napkin Math" variety. See the screenshot (reproduced without permission from [Bohacek et al](https://onlinelibrary.wiley.com/doi/pdf/10.1002/(SICI)1098-1128(199601)16:1%3C3::AID-MED1%3E3.0.CO;2-6)) below.
 
 ![Bohacek]({{ site.url }}/assets/bohacek.png)  
 
