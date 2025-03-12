@@ -1,0 +1,154 @@
+---
+layout: post
+title:  "Baseline approaches in the Polaris challenge"
+date:   2025-03-14 00:00:01 +0100
+categories: blog
+---
+Molecular property prediction has a serious bottleneck: data. Commonly used benchmark data have various problems as talked about at length [elsewhere](http://practicalcheminformatics.blogspot.com/2023/08/we-need-better-benchmarks-for-machine.html). One organization which is trying to tackle this problem head on is [Polaris](https://polarishub.io/). Among other things, they provide certification by domain experts of some "gold standard" data sets. And now they're also doing a prospective prediction challenge with ASAP discovery who shared some of their internal data related to a MERS-CoV main protease (MPro) drug design project, in search of broad-spectrum coronavirus main protease inhibitors, which will be useful to have in hand for the next coronavirus pandemic. These type of challenges are a great way to actually evaluate computational methods fairly without the chance of overfitting to known validation results (intentionally or non-intentionally).
+
+I participated in this challenge with some rather simple baseline methods which I'll describe in detail below. I tried to use RDKit only methods and not use any "fancy" machine learning methods, not even Random Forests or anything. That failed quite badly in the potency and ADMET challenges on the intermediary leaderboard, so I opted to use an ML method after all. You can check the [source code](https://github.com/dehaenw/polaris-baselines) on my github, though I just provide the code as jupyter notebooks for now.
+
+## Challenge 1: Pose prediction
+A training set of about 800 SARS-CoV-2 MPro inhibitors and their poses inside the protein are provided,
+the compounds are mostly part of the isoquinoline series identified by the [Covid Moonshot](https://postera.ai/moonshot/) project.
+A test set of about 200 compounds is provided and the challenge is predicting their poses in either MERS-CoV or SARS-CoV-2 MPro.
+The main binding site for inhibitors is fairly similar between the two,
+but alignment of the two structures shows there are some differences anyway,
+for example a Leucine to Methionine change means SARS-CoV-2 MPro sterically doesn't tolerate some things MERS-CoV MPro does. 
+
+This challenge is probably the most tricky one for machine learning people.
+First of all, the challenge requires proper alignment of the predicted poses to a provided reference structure.
+The 800 example poses do not have exactly aligned proteins, and in some case have the ligand closer to the B-chain.
+The work of properly aligning these structures may be routine for many, but it is not exactly trivial.
+I expect this has been a point of failure for some teams.
+Second, this pose prediction challenge has the benefit of very good structural data and a lot of homology between compounds.
+This means that using domain knowledge some decent assumptions can be made:
+the isoquinoline ring in the compounds and its nearby carbonyl oxygen will most likely overlap with the reference structure.
+And the binding pockets are close enough that imputing SARS-CoV-2 MPro poses into an aligned MERS-CoV MPro structure will be a pretty good first bet.
+But that's something you have to know.
+Finally, some of the data as provided, invites overthinking the problem:
+the sequence of the A and B chain are provided, suggesting that co-folding may be an answer.
+But the main binding site is known! And nearly all the test compounds are part of the same chemical series!
+
+OK, so much for the background.
+Based on the above insights, I figured it would be possible to try a fully ligand-based approach, just based on similarity to provided poses.
+This also means in this baseline approach I consider the MERS-CoV and SARS-CoV-2 MPro as fully identical, which they of course are not. 
+
+As mentioned above, the provided poses in the training set are actually not aligned to the reference structures.
+Fortunately, [Biotite](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-023-05345-6)
+has a nice alignment method in-built and I used this to get correct aligned absolute coordinates for the poses.
+This also required re-parsing the ligand from the PDB,
+which fortunately thanks to the [AssignBondOrdersFromTemplate](https://www.rdkit.org/docs/source/rdkit.Chem.AllChem.html#rdkit.Chem.AllChem.AssignBondOrdersFromTemplate)
+method was a lifesaver to get clean output. This was the only segment where I used information on the protein side. 
+
+With this pre-processing out of the way, now we can finally construct a baseline. I thought of the following procedure:
+
+- Calculate the maximum common substructure with all compounds in the training set and retain the best match
+- Perform constrained embedding (i.e. 3D conformer generation), keeping the coordinates of MCS matched atoms fixed
+- Ranking the 3D conformers using the new Align3D functionality from RDKit
+
+# Maximum common substructure (MCS) 
+Because there is so much similarity between the ligands in the train set and the test set,
+it was possible to get pretty nice matches for every molecule in the train set. 
+I used the new RascalMCES method, which is also able to provide unconnected common substructures,
+although using this information messed up the constrained embedding so I opted for the largest connected substructure only.
+
+# Constrained embedding
+During 3D conformer generation it is possible to lock some of the atom coordinates. Sometimes this constrains the molecule too much -
+this is why the unconnected substructures lead to embedding failures.
+In some cases, it's also necessary to turn of stereochemistry constraints.
+In a real life pose prediction scenario that would be a pretty severe faux pas,
+but, hey, even Nobel prize alumnus AlphaFold 3 suffers from the occasional random stereochemistry flip.
+I used ETKDGv3 for constrained embedding and calculated 50 conformers per molecule so the next step has some good options to choose from.
+
+# 3D alignment
+RDKit has a new 3D alignment method which is in some ways comparable with the ROCS method. One way in which it is comparable is that it is really fast.
+Both methods are based on the ["Gaussian description of molecular shape"](https://pubs.acs.org/doi/10.1021/j100011a016) insight, which enables much faster,
+yet pretty accurate calculation of volume overlap. This JA Grant paper is really cool and recommended reading. When the volumes are "colored"
+(i.e. assigned features like aromatic, hydrogen bond donor, ...) it is possible to calculate a pharmacophore like overlap score. And this is exactly what I used to rank conformers:
+I calculate the "ColorTanimoto" of each conformer to its original best MCS-matched pose and just retain the one with the best score.
+Note that I use only the score and not the realigned coordinates, as I rely on the coordinates from constrained embedding.
+
+And that's all. What to make of this method?
+It will certainly totally collapse in any situation where the test ligands are very novel or where the binding site of interest does not have known analogs.
+In the current challenge, it can also be said this really is a baseline method:
+any structure based method should really be able to leverage structural information that is better than what is basically the most simple possible 3d similarity placement.
+
+# Performance
+The baseline performed surpringly well.
+On the ultimate intermediate leaderboard, this method placed 4th, managing to predict 51% of the poses with 2 Angstrom, with a mean RMSD of 3.462 Angstrom.
+When removing the organizers' cross-docking baseline, this baseline even entered the podium with a third place.
+I attribute this in part to some of the technically tricky parts of properly aligning the predicted poses,
+which may have disqualified some participants. Still, it is a strong showing for such a simple method.
+
+# Last-minute enhancements
+Encouraged by the good results obtained by this method, I sought to improve the predictions a bit more.
+In the original approach, I did not account for the difference of the MERS-CoV MPro binding site.
+I also did not inspect the poses visually except to check if they are really in the right pocket.
+I allowed wrong stereochemistry to be used in constrained embedding.
+I did not use any external structures (permitted by the rules of the challenge) in the original approach.
+In the final submission, I did the following changes:
+
+- Instead of aligning SARS-CoV-2 molecules to the MERS MPro, I used structures I could find in the PDB, there were a few dozen. 
+- I noticed the poses picked by Align3d had a significant RMSD between the pre- and post-alignment coordinates. In other words, this seemed to be more or less random and probably did not increase the performance. I simplified the approach and now pick the conformation with the highest volume overlap without doing any alignment using a very rough grid based method.
+- I noticed the MCS had some issues and sometimes gave tiny matches of only a few atoms, when there should be more. Fixed this by requiring a minimum size for the MCS.
+
+All the other approximations remained in place.
+
+Let's see if these "enhancements" actually do not degrade the performance.
+Some potential risks are lower diversity of MERS compounds (most of them have the classic protease inhibitor motif instead of the isoquinoline one).
+Another potential risk is the volume overlap function I used. 
+
+## Challenge 2: Potency prediction
+The second challenge is a more traditional QSAR task.
+A set of molecules and their potency at either MPro are provided.
+In some cases, the molecules have been tested at only one of the two targets.
+This set has the great advantage the assays were all done in-house by the same firm,
+meaning most of the variability in measurements is probably just experimental error. 
+
+In this case, I figured a good baseline could be similarity based.
+So, I made predictions using the average of the scores for the nearest neighbors that have similarity above a given threshold.
+I calculated the similarity simply using the Tanimoto similarity between Morgan (radius 3, 4096 bits) count fingerprints.
+I selected the threshold by splitting the training data and picking the point with the lowest MAE. 
+
+# Performance
+This baseline strongly underperformed.
+It was one of the worst ranked methods on the leaderboard.
+Its ranking was 22nd out of 23.
+I probably should have chosen a more performant baseline, such as fingerprints+physicochemical descriptors and a tree based model instead of the current approach. 
+
+# Last-minute enhancements
+Considering the failure of this method, I thought to try a totally different method.
+I had just read about TabPFN which promises great performance on tabular data so I essentially used that approach out of the box.
+I also read in the discussion some teams that performed well in the ADMET challenge used data augmentation beyond the provided set,
+so I tried bulding a model using extra data from ChEMBL from S2 MPro but the performance actually went down, so I scrapped that.
+TabPFN has the peculiarity it expects no more than 500 features, but I opted for physchem descriptors from rdkit and Morgan with r=3 and fpSize=2048,
+and ran it anyway.
+Compared with using a highly folded FP to stay inside of 500 features there was not really a big performance difference so I opted not to fold.
+Let's see how well this method will work. 
+
+## Challenge 3: ADMET prediction
+The third challenge is another QSAR task. 5 ADME related endpoints are given.
+In this case, the properties to predict are liver microsomal stability in mice and humans, logD, solubility and cell permeation.
+Again, assays were done in house, taking away one source of possible errors or noise.
+
+In this case, I used an identical approach to the one used in Challenge 2:
+I simply averaged the values for whatever molecules met the threshold of "Similar".
+I used the same representation and similarity function.
+
+# Performance
+This baseline strongly underperformed. It was one of the worst ranked methods on the leaderboard. Its ranking was 30th out of 34. The same conclusions as in Challenge 2 hold.
+
+# Last-minute enhacements
+See part 2: Potency. Did the same thing here and switched to TabPFN with the same representation.
+
+## Conclusion
+Several surprising conclusions can be made from the performance of these baseline methods.
+Perhaps the most important insight is that strictly ligand-based methods can give relatively good apparent performance.
+This is also meaningful in light of recent insights that cofolding methods to some extent rely on memorization.
+From the underperforming baselines in the ADMET and Potency challenges,
+the main conclusion is that a baseline should be as simple as it needs to be, but not simpler.
+This means that in the case of a QSAR-like task,
+the golden standard of Morgan-like fingerprints and tree based ensemble models still reigns supreme.
+How TabPFN did remains to be seen (will update this once the results drop).
+It was a lot of fun to participate in the challenge and to see which methods others came up with.
