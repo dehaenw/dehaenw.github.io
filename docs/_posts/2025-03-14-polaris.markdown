@@ -97,7 +97,7 @@ All the other approximations remained in place.
 
 Let's see if these "enhancements" actually do not degrade the performance.
 Some potential risks are lower diversity of MERS compounds (most of them have the classic protease inhibitor motif instead of the isoquinoline one).
-Another potential risk is the volume overlap function I used. 
+Another potential risk is the volume overlap function I used. Update after the results got released: The enhancements effectively degraded the performance, going from 51% to 34%.
 
 ## Challenge 2: Potency prediction
 The second challenge is a more traditional QSAR task.
@@ -125,7 +125,7 @@ so I tried bulding a model using extra data from ChEMBL from S2 MPro but the per
 TabPFN has the peculiarity it expects no more than 500 features, but I opted for physchem descriptors from rdkit and Morgan with r=3 and fpSize=2048,
 and ran it anyway.
 Compared with using a highly folded FP to stay inside of 500 features there was not really a big performance difference so I opted not to fold.
-Let's see how well this method will work. 
+Let's see how well this method will work. Update: it worked quite well, having quite an average performance (12/32). It seems TabPFN is indeed pretty good at learning from tabular data.
 
 ## Challenge 3: ADMET prediction
 The third challenge is another QSAR task. 5 ADME related endpoints are given.
@@ -140,7 +140,7 @@ I used the same representation and similarity function.
 This baseline strongly underperformed. It was one of the worst ranked methods on the leaderboard. Its ranking was 30th out of 34. The same conclusions as in Challenge 2 hold.
 
 # Last-minute enhacements
-See part 2: Potency. Did the same thing here and switched to TabPFN with the same representation.
+See part 2: Potency. Did the same thing here and switched to TabPFN with the same representation. Update:  a little bit worse performance here (30/39) but still better than the previous approach.
 
 ## Conclusion
 Several surprising conclusions can be made from the performance of these baseline methods.
@@ -150,5 +150,5 @@ From the underperforming baselines in the ADMET and Potency challenges,
 the main conclusion is that a baseline should be as simple as it needs to be, but not simpler.
 This means that in the case of a QSAR-like task,
 the golden standard of Morgan-like fingerprints and tree based ensemble models still reigns supreme.
-How TabPFN did remains to be seen (will update this once the results drop).
+How TabPFN did remains to be seen (update: TabPFN did OK, but nothing spectacular).
 It was a lot of fun to participate in the challenge and to see which methods others came up with.
