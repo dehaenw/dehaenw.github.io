@@ -31,6 +31,8 @@ future: true
 theme: minima
 plugins:
   - jekyll-feed
+include:
+  - search
 
 # Exclude from processing.
 # The following items will not be processed, by default.
